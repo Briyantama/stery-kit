@@ -15,7 +15,6 @@ Go module `github.com/Briyantama/stery-kit/go` (`go/`):
 - `events`: event envelope, publisher and consumer groups over Redis-protocol streams
 - `authn`: RS256 bearer verification, role checks, optional Redis token revocation
 - `ratelimit`: fixed-window Redis rate limit middleware
-- `envconf`: helpers for `config.Load` (collected problems, ports, bools, CIDR lists)
 
 npm package `@stery/kit` (`web/`), TypeScript shipped as source:
 

@@ -42,8 +42,8 @@ func WithClaims(ctx context.Context, c Claims) context.Context {
 func Authenticate(v Verifier) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			token, ok := bearer(r)
-			if !ok {
+			token := Bearer(r)
+			if token == "" {
 				httpx.WriteError(w, http.StatusUnauthorized, "unauthorized")
 				return
 			}
@@ -83,11 +83,12 @@ func WithRole(roles ...string) func(http.Handler) http.Handler {
 	}
 }
 
-func bearer(r *http.Request) (string, bool) {
+// Bearer returns the token of an "Authorization: Bearer <token>" header, or "" when there is none.
+func Bearer(r *http.Request) string {
 	scheme, token, found := strings.Cut(r.Header.Get("Authorization"), " ")
 	token = strings.TrimSpace(token)
-	if !found || !strings.EqualFold(scheme, "Bearer") || token == "" {
-		return "", false
+	if !found || !strings.EqualFold(scheme, "Bearer") {
+		return ""
 	}
-	return token, true
+	return token
 }
