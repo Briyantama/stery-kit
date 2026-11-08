@@ -1,0 +1,62 @@
+{
+	"name": "@stery/kit",
+	"version": "0.1.0",
+	"description": "Shared web infrastructure for the Stery products: API envelope client and SvelteKit BFF helpers.",
+	"private": true,
+	"type": "module",
+	"repository": {
+		"type": "git",
+		"url": "git+ssh://git@github.com/Briyantama/stery-kit.git",
+		"directory": "web"
+	},
+	"engines": {
+		"node": ">=20.19"
+	},
+	"exports": {
+		".": "./src/index.ts",
+		"./sveltekit/*": "./src/sveltekit/*.ts",
+		"./ui": {
+			"types": "./src/ui/index.ts",
+			"svelte": "./src/ui/index.ts",
+			"default": "./src/ui/index.ts"
+		},
+		"./styles/*": "./src/styles/*"
+	},
+	"files": [
+		"src"
+	],
+	"scripts": {
+		"check": "svelte-check --tsconfig ./tsconfig.json",
+		"test:unit": "vitest run"
+	},
+	"peerDependencies": {
+		"@sveltejs/kit": "^2.63.0",
+		"svelte": "^5.56.1"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "^2.63.0",
+		"@types/node": "^20.19.43",
+		"svelte": "^5.56.1",
+		"typescript": "^6.0.3",
+		"vite": "^8.0.16",
+		"vitest": "^4.1.11",
+		"@sveltejs/vite-plugin-svelte": "^7.1.2",
+		"svelte-check": "^4.6.0",
+		"@testing-library/svelte": "^5.4.2",
+		"@testing-library/jest-dom": "^6.9.1",
+		"jsdom": "^27.0.0",
+		"tailwindcss": "^4.3.5",
+		"@tailwindcss/vite": "^4.3.5"
+	},
+	"svelte": "./src/ui/index.ts",
+	"sideEffects": [
+		"**/*.css"
+	],
+	"dependencies": {
+		"bits-ui": "^2.20.6",
+		"@internationalized/date": "^3.8.1",
+		"clsx": "^2.1.1",
+		"tailwind-merge": "^3.7.0",
+		"tailwind-variants": "^4.0.1"
+	}
+}
