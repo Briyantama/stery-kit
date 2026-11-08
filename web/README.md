@@ -16,7 +16,7 @@ The kit is a sibling directory of each product, linked by path (not published):
 "@stery/kit": "file:../../../stery-kit/web"
 ```
 
-Then run `npm install` in the app. Peer dependencies: `svelte` ^5.56.1 and `@sveltejs/kit` ^2.63.0. The kit brings its own `bits-ui`, `clsx`, `tailwind-merge` and `tailwind-variants`.
+Then run `npm install` in the app. Peer dependencies: `svelte` ^5.56.1 and `@sveltejs/kit` ^2.63.0. The kit brings its own `bits-ui`, `tailwind-merge` and `tailwind-variants`.
 
 ## Entry points
 
