@@ -1,0 +1,46 @@
+/*
+ * Base layer: element defaults on top of Tailwind preflight. Kept in @layer base so any
+ * utility class wins without !important. No component classes live here.
+ */
+@layer base {
+	html {
+		font-family: var(--font-sans);
+		background-color: var(--background);
+		color: var(--foreground);
+		-webkit-font-smoothing: antialiased;
+		text-rendering: optimizeLegibility;
+	}
+
+	*,
+	::before,
+	::after {
+		border-color: var(--border);
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
+	}
+
+	::selection {
+		background-color: color-mix(in oklch, var(--primary) 25%, transparent);
+	}
+
+	[hidden]:where(:not([hidden='until-found'])) {
+		display: none !important;
+	}
+}
+
+@utility sr-only-focusable {
+	&:not(:focus):not(:focus-within) {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border-width: 0;
+	}
+}

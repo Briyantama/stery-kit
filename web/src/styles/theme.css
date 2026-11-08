@@ -1,0 +1,84 @@
+/*
+ * Tailwind v4 entry for apps that use the Stery kit.
+ *
+ *   @import 'tailwindcss';
+ *   @import '@stery/kit/styles/theme.css';
+ *
+ * Maps tokens.css to utilities (bg-primary, text-muted-foreground, rounded-lg, shadow-md, ...),
+ * adds the `dark:` variant for [data-theme=dark], and tells Tailwind to scan the kit's
+ * components so their classes survive production builds (the kit is a linked package
+ * outside the app root, which automatic source detection does not cover).
+ */
+@import './tokens.css';
+@import './base.css';
+
+@source '../ui';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme inline {
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-surface: var(--surface);
+	--color-surface-foreground: var(--surface-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+	--color-overlay: var(--overlay);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-destructive-foreground: var(--destructive-foreground);
+	--color-success: var(--success);
+	--color-success-foreground: var(--success-foreground);
+	--color-warning: var(--warning);
+	--color-warning-foreground: var(--warning-foreground);
+	--color-info: var(--info);
+	--color-info-foreground: var(--info-foreground);
+
+	--font-sans: var(--font-sans);
+	--font-display: var(--font-display);
+	--font-mono: var(--font-mono);
+
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) + 4px);
+
+	--shadow-sm: var(--elevation-1);
+	--shadow-md: var(--elevation-2);
+	--shadow-lg: var(--elevation-3);
+
+	--z-index-dropdown: var(--z-dropdown);
+	--z-index-sticky: var(--z-sticky);
+	--z-index-overlay: var(--z-overlay);
+	--z-index-modal: var(--z-modal);
+	--z-index-toast: var(--z-toast);
+	--z-index-tooltip: var(--z-tooltip);
+
+	--ease-out: var(--ease-out);
+
+	--animate-fade-in: sk-fade-in var(--duration-normal) var(--ease-out);
+	--animate-scale-in: sk-scale-in var(--duration-normal) var(--ease-out);
+	--animate-slide-in-right: sk-slide-in-right var(--duration-slow) var(--ease-out);
+	--animate-slide-in-up: sk-slide-in-up var(--duration-normal) var(--ease-out);
+}
+
+@keyframes sk-fade-in {
+	from { opacity: 0; }
+}
+@keyframes sk-scale-in {
+	from { opacity: 0; transform: scale(0.96); }
+}
+@keyframes sk-slide-in-right {
+	from { transform: translateX(100%); }
+}
+@keyframes sk-slide-in-up {
+	from { opacity: 0; transform: translateY(0.5rem); }
+}
