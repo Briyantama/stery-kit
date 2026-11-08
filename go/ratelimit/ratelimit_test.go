@@ -49,3 +49,22 @@ func TestMiddleware(t *testing.T) {
 		t.Errorf("redis down = %d, want fail open 200", rec.Code)
 	}
 }
+
+func TestMiddleware_rearmsKeyWithoutExpiry(t *testing.T) {
+	mr := miniredis.RunT(t)
+	rdb := redis.NewClient(&redis.Options{Addr: mr.Addr()})
+	t.Cleanup(func() { _ = rdb.Close() })
+	_ = mr.Set("rl:1.2.3.4", "99") // a counter whose EXPIRE was lost
+	h := ratelimit.Middleware(rdb, "rl:", 2, time.Minute, ratelimit.ClientIP)(
+		http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) }))
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.RemoteAddr = "1.2.3.4:1"
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != 429 || rec.Header().Get("Retry-After") != "60" {
+		t.Errorf("got %d Retry-After=%q, want 429 and 60", rec.Code, rec.Header().Get("Retry-After"))
+	}
+	if mr.TTL("rl:1.2.3.4") <= 0 {
+		t.Error("key still has no expiry")
+	}
+}
