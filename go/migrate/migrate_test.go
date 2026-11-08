@@ -33,7 +33,8 @@ func TestCheckUniqueVersions(t *testing.T) {
 func TestFingerprint_changesWithContent(t *testing.T) {
 	a := fstest.MapFS{"0001_a.sql": {Data: sql()}}
 	b := fstest.MapFS{"0001_a.sql": {Data: append(sql(), '\n')}}
-	if migrate.Fingerprint(a) != migrate.Fingerprint(a) || migrate.Fingerprint(a) == migrate.Fingerprint(b) {
+	first := migrate.Fingerprint(a)
+	if first != migrate.Fingerprint(a) || first == migrate.Fingerprint(b) {
 		t.Error("fingerprint must be stable and content-sensitive")
 	}
 }

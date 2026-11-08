@@ -17,6 +17,9 @@ func TestPageParams(t *testing.T) {
 		{"page=3&per_page=50", 3, 50, false},
 		{"page=0", 0, 0, true},
 		{"page=x", 0, 0, true},
+		{"page=100000", 100000, 20, false},
+		{"page=100001", 0, 0, true},
+		{"page=9223372036854775807", 0, 0, true},
 		{"per_page=0", 0, 0, true},
 		{"per_page=101", 0, 0, true},
 	}
