@@ -1,6 +1,8 @@
 import { json, type RequestEvent, type RequestHandler } from '@sveltejs/kit';
 import { parseSession } from './session';
 
+const UPSTREAM_TIMEOUT_MS = 15_000;
+
 // Headers that must not be forwarded verbatim across the proxy hop.
 const STRIP: Record<string, true> = {
 	connection: true,
@@ -89,11 +91,16 @@ export function createApiProxy(opts: ApiProxyOptions) {
 			init.body = await request.arrayBuffer();
 		}
 
+		// Time out waiting for the upstream's response headers; the body then streams without a limit.
+		const ctl = new AbortController();
+		const timer = setTimeout(() => ctl.abort(), UPSTREAM_TIMEOUT_MS);
 		let res: Response;
 		try {
-			res = await fetch(target, init);
+			res = await fetch(target, { ...init, signal: ctl.signal });
 		} catch {
 			return json({ success: false, data: null, error: 'upstream unavailable' }, { status: 502 });
+		} finally {
+			clearTimeout(timer);
 		}
 		if (res.status === 401) unauthorized();
 

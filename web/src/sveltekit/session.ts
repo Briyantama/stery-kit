@@ -1,4 +1,4 @@
-import { error, json, type Cookies, type RequestHandler } from '@sveltejs/kit';
+import { error, json, type Cookies, type RequestEvent, type RequestHandler } from '@sveltejs/kit';
 import type { Envelope } from '../api';
 
 /**
@@ -81,6 +81,17 @@ interface LoginData {
 	claims?: { role?: string; store_id?: string };
 }
 
+const UPSTREAM_TIMEOUT_MS = 15_000;
+
+/** The caller's address for `X-Forwarded-For`; undefined when the adapter cannot provide one (e.g. prerender). */
+function clientIp(event: Pick<RequestEvent, 'getClientAddress'>): string | undefined {
+	try {
+		return event.getClientAddress();
+	} catch {
+		return undefined;
+	}
+}
+
 /**
  * `POST` exchanges credentials for a session cookie (login via `${upstream}/api/v1/login`),
  * `DELETE` calls `${upstream}/api/v1/logout` best effort and clears the cookie.
@@ -95,18 +106,20 @@ export function createSessionHandlers(opts: SessionHandlersOptions): {
 	// Client errors the login form can act on pass through; anything else is the gateway's fault.
 	const PASSTHROUGH = new Set([400, 401, 403, 404, 409, 422, 429]);
 
-	const logoutUpstream = async (token: string) => {
+	const logoutUpstream = async (token: string, ip?: string) => {
 		try {
 			await fetch(`${opts.upstream()}/api/v1/logout`, {
 				method: 'POST',
-				headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+				headers: { Authorization: `Bearer ${token}`, Accept: 'application/json', ...(ip && { 'X-Forwarded-For': ip }) },
+				signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS)
 			});
 		} catch {
 			// Best effort: the caller proceeds regardless of upstream availability.
 		}
 	};
 
-	const POST: RequestHandler = async ({ request, cookies }) => {
+	const POST: RequestHandler = async (event) => {
+		const { request, cookies } = event;
 		let payload: { email?: string; password?: string; store_id?: string };
 		try {
 			payload = await request.json();
@@ -120,12 +133,14 @@ export function createSessionHandlers(opts: SessionHandlersOptions): {
 		if (!email || !password) error(400, 'Email and password are required.');
 		if (store.requireStore && !storeId) error(400, 'Store ID is required.');
 
+		const ip = clientIp(event);
 		let res: Response;
 		try {
 			res = await fetch(`${opts.upstream()}/api/v1/login`, {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-				body: JSON.stringify(store.requireStore ? { email, password, store_id: storeId } : { email, password })
+				headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(ip && { 'X-Forwarded-For': ip }) },
+				body: JSON.stringify(store.requireStore ? { email, password, store_id: storeId } : { email, password }),
+				signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS)
 			});
 		} catch {
 			error(502, 'Cannot reach authentication service.');
@@ -133,12 +148,13 @@ export function createSessionHandlers(opts: SessionHandlersOptions): {
 
 		const body = (await res.json().catch(() => null)) as Envelope<LoginData> | null;
 		if (!res.ok) error(PASSTHROUGH.has(res.status) ? res.status : 502, body?.error || 'Login failed.');
+		if (!body?.data) error(502, 'Invalid login response from gateway.');
 
-		const token = body?.data?.access_token;
-		const role = body?.data?.claims?.role;
+		const token = body.data.access_token;
+		const role = body.data.claims?.role;
 		if (role !== requiredRole) {
 			// The upstream already opened a refresh session for this token; close it.
-			if (token) await logoutUpstream(token);
+			if (token) await logoutUpstream(token, ip);
 			error(403, forbidden);
 		}
 		if (!token) error(502, 'Invalid login response from gateway.');
@@ -152,10 +168,10 @@ export function createSessionHandlers(opts: SessionHandlersOptions): {
 		return json({ role });
 	};
 
-	const DELETE: RequestHandler = async ({ cookies }) => {
-		const session = store.read(cookies);
-		if (session) await logoutUpstream(session.token);
-		store.clear(cookies);
+	const DELETE: RequestHandler = async (event) => {
+		const session = store.read(event.cookies);
+		if (session) await logoutUpstream(session.token, clientIp(event));
+		store.clear(event.cookies);
 		return json({ ok: true });
 	};
 

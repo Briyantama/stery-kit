@@ -58,6 +58,33 @@ describe('createSessionHandlers', () => {
 		expect(set).not.toHaveBeenCalled();
 	});
 
+	it('forwards the client address on login and logout', async () => {
+		const fetchMock = login({ access_token: 'jwt', claims: { role: 'admin' } });
+		vi.stubGlobal('fetch', fetchMock);
+		const store = createSessionStore({ cookie: 'c', secure: true });
+		const { POST, DELETE } = createSessionHandlers({ upstream: () => 'http://api.test', store, requiredRole: 'admin' });
+		const { cookies } = fakeCookies({ c: JSON.stringify({ token: 'jwt', role: 'admin' }) });
+		const getClientAddress = () => '203.0.113.9';
+
+		await POST({ ...post(cookies, { email: 'a@b.test', password: 'pw' }), getClientAddress } as unknown as RequestEvent);
+		await DELETE({ cookies, getClientAddress } as unknown as RequestEvent);
+
+		for (const call of fetchMock.mock.calls) {
+			const init = (call as unknown as [string, RequestInit])[1];
+			expect((init.headers as Record<string, string>)['X-Forwarded-For']).toBe('203.0.113.9');
+			expect(init.signal).toBeInstanceOf(AbortSignal);
+		}
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+	});
+
+	it('answers 502, not 403, when the login response has no data', async () => {
+		vi.stubGlobal('fetch', vi.fn(async () => new Response('not json', { status: 200 })));
+		const store = createSessionStore({ cookie: 'c', secure: true });
+		const { POST } = createSessionHandlers({ upstream: () => 'http://api.test', store, requiredRole: 'admin' });
+
+		await expect(POST(post(fakeCookies().cookies, { email: 'a@b.test', password: 'pw' }))).rejects.toMatchObject({ status: 502 });
+	});
+
 	it('passes upstream 4xx statuses through and maps 5xx to 502', async () => {
 		const store = createSessionStore({ cookie: 'c', secure: true });
 		const { POST } = createSessionHandlers({ upstream: () => 'http://api.test', store, requiredRole: 'admin' });
