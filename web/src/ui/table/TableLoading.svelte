@@ -1,3 +1,4 @@
+<!-- Set `aria-busy` on the surrounding table/tbody while loading; it does not belong on the placeholder rows. -->
 <script lang="ts">
 	import { Skeleton } from '../skeleton';
 	import { cn } from '../utils/cn';
@@ -17,7 +18,7 @@
 </script>
 
 {#each { length: rows }, r}
-	<tr aria-busy="true" class={cn('border-b border-border', className)}>
+	<tr class={cn('border-b border-border', className)}>
 		{#each { length: columns }, c}
 			<td class="p-3">
 				<Skeleton class="h-4 w-full" />

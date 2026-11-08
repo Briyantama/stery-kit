@@ -44,8 +44,8 @@ class ThemeStore {
 	}
 
 	setTheme(next: Theme): void {
+		if (typeof window === 'undefined') return; // theme is a server-wide singleton; never mutate it during SSR
 		this.value = next;
-		if (typeof window === 'undefined') return;
 		try {
 			localStorage.setItem(THEME_STORAGE_KEY, next);
 		} catch {

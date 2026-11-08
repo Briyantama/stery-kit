@@ -52,8 +52,10 @@
 		...rest
 	}: Props = $props();
 
-	const current = $derived(Math.min(Math.max(value, 0), max));
-	const percent = $derived(max > 0 ? (current / max) * 100 : 0);
+	// A zero or negative max has no valid ARIA range; fall back to the default.
+	const safeMax = $derived(max > 0 ? max : 100);
+	const current = $derived(Math.min(Math.max(value, 0), safeMax));
+	const percent = $derived((current / safeMax) * 100);
 	const slots = $derived(progressVariants({ tone, size }));
 </script>
 
@@ -61,9 +63,9 @@
 	bind:this={ref}
 	role="progressbar"
 	aria-valuemin={0}
-	aria-valuemax={max}
+	aria-valuemax={safeMax}
 	aria-valuenow={indeterminate ? undefined : current}
-	data-state={indeterminate ? 'indeterminate' : current >= max ? 'complete' : 'loading'}
+	data-state={indeterminate ? 'indeterminate' : current >= safeMax ? 'complete' : 'loading'}
 	class={cn(slots.root(), className)}
 	{...rest}
 >

@@ -25,6 +25,8 @@ let seq = 0;
 type Shorthand = (title: string, options?: Omit<ToastOptions, 'title' | 'tone'>) => string;
 
 function show(options: ToastOptions): string {
+	// The store is module-level, so on the server it would be shared by every request: drop toasts there.
+	if (typeof window === 'undefined') return '';
 	const id = `toast-${++seq}`;
 	items.push({
 		id,

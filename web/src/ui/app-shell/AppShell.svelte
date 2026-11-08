@@ -40,6 +40,26 @@
 	function onSidebarClick(event: MouseEvent) {
 		if ((event.target as Element).closest('a')) open = false;
 	}
+
+	let sidebarEl = $state<HTMLElement | null>(null);
+	let toggleEl = $state<HTMLButtonElement | null>(null);
+	let wasOpen = false;
+
+	// Move focus into the drawer when it opens and back to the toggle when it closes.
+	$effect(() => {
+		if (open) sidebarEl?.querySelector<HTMLElement>('a[href], button')?.focus();
+		else if (wasOpen && sidebarEl?.contains(document.activeElement)) toggleEl?.focus();
+		wasOpen = open;
+	});
+
+	// The drawer only exists below md; a stale `open` would leave the page inert after a resize.
+	$effect(() => {
+		if (typeof window.matchMedia !== 'function') return;
+		const mq = window.matchMedia('(min-width: 768px)');
+		const onChange = () => mq.matches && (open = false);
+		mq.addEventListener('change', onChange);
+		return () => mq.removeEventListener('change', onChange);
+	});
 </script>
 
 <svelte:window onkeydown={onKeydown} />
@@ -61,6 +81,7 @@
 		<!-- Delegated link clicks close the drawer; keyboard activation of a link fires click too. -->
 		<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
 		<aside
+			bind:this={sidebarEl}
 			id={sidebarId}
 			data-open={open}
 			onclick={onSidebarClick}
@@ -74,11 +95,13 @@
 		</aside>
 	{/if}
 
-	<div class="flex min-w-0 flex-1 flex-col">
+	<!-- Inert while the drawer is open so focus and assistive tech cannot reach the page behind it. -->
+	<div class="flex min-w-0 flex-1 flex-col" inert={open}>
 		{#if header || sidebar}
 			<div class="sticky top-0 z-sticky flex min-h-14 items-center gap-2 border-b border-border bg-surface px-4 text-surface-foreground">
 				{#if sidebar}
 					<button
+						bind:this={toggleEl}
 						type="button"
 						class="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:hidden"
 						aria-label={menuLabel}

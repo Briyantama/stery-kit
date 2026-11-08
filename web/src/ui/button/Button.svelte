@@ -26,6 +26,7 @@
 		class: className,
 		ref = $bindable(null),
 		children,
+		onclick,
 		...rest
 	}: Props = $props();
 
@@ -47,6 +48,7 @@
 	<a
 		bind:this={ref}
 		{...rest as HTMLAnchorAttributes}
+		onclick={inactive ? (e: MouseEvent) => e.preventDefault() : (onclick as HTMLAnchorAttributes['onclick'])}
 		href={inactive ? undefined : href}
 		role={inactive ? 'link' : undefined}
 		aria-disabled={inactive ? 'true' : undefined}
@@ -60,6 +62,7 @@
 	<button
 		bind:this={ref}
 		{...rest}
+		{onclick}
 		{type}
 		disabled={inactive}
 		aria-busy={loading ? 'true' : undefined}

@@ -11,6 +11,16 @@ afterEach(() => {
 });
 
 describe('toast store', () => {
+	it('ignores show() on the server, where the store would be shared across requests', () => {
+		vi.stubGlobal('window', undefined);
+		try {
+			expect(toast.show({ title: 'Leak' })).toBe('');
+		} finally {
+			vi.unstubAllGlobals();
+		}
+		expect(toast.items).toHaveLength(0);
+	});
+
 	it('show adds an item with defaults and returns its id', () => {
 		const id = toast.show({ title: 'Saved' });
 		expect(toast.items).toHaveLength(1);

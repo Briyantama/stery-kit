@@ -33,6 +33,8 @@
 		dismissible?: boolean;
 		dismissLabel?: string;
 		ondismiss?: () => void;
+		/** Whether the alert is shown. Bindable: set it back to `true` to show a dismissed alert again. */
+		open?: boolean;
 		ref?: HTMLDivElement | null;
 		children?: Snippet;
 	}
@@ -44,6 +46,7 @@
 		icon,
 		dismissible = false,
 		dismissLabel = 'Dismiss',
+		open = $bindable(true),
 		ondismiss,
 		ref = $bindable(null),
 		class: className,
@@ -51,7 +54,6 @@
 		...rest
 	}: Props = $props();
 
-	let open = $state(true);
 	const role = $derived(tone === 'destructive' || tone === 'warning' ? 'alert' : 'status');
 
 	function dismiss() {

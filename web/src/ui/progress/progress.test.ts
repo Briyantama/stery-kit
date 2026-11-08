@@ -16,6 +16,14 @@ describe('Progress', () => {
 		expect(bar().style.width).toBe('20%');
 	});
 
+	it('falls back to 100 when max is zero or negative', () => {
+		render(Progress, { value: 30, max: -10, 'aria-label': 'x' });
+		const el = screen.getByRole('progressbar');
+		expect(el).toHaveAttribute('aria-valuemax', '100');
+		expect(el).toHaveAttribute('aria-valuenow', '30');
+		expect(el).toHaveAttribute('data-state', 'loading');
+	});
+
 	it('defaults max to 100', () => {
 		render(Progress, { value: 25 });
 		expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuemax', '100');

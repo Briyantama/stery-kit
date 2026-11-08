@@ -69,6 +69,20 @@ describe('Button', () => {
 		expect(link).not.toHaveAttribute('href');
 		expect(link).toHaveAttribute('tabindex', '-1');
 	});
+
+	it('anchor does not fire onclick while disabled or loading, but does when active', async () => {
+		const onclick = vi.fn();
+		const { unmount } = render(Button, { href: '/home', disabled: true, onclick, children: text('Home') });
+		await fireEvent.click(screen.getByRole('link', { name: 'Home' }));
+		unmount();
+		const loading = render(Button, { href: '/home', loading: true, onclick, children: text('Home') });
+		await fireEvent.click(screen.getByRole('link', { name: 'Home' }));
+		expect(onclick).not.toHaveBeenCalled();
+		loading.unmount();
+		render(Button, { href: '/home', onclick, children: text('Home') });
+		await fireEvent.click(screen.getByRole('link', { name: 'Home' }));
+		expect(onclick).toHaveBeenCalledOnce();
+	});
 });
 
 describe('ButtonGroup', () => {
