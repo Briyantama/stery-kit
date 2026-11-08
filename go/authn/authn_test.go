@@ -175,12 +175,37 @@ func TestRedisRevocation(t *testing.T) {
 	if gone, err := check(context.Background(), "j1"); gone || err != nil {
 		t.Fatalf("fresh jti: gone=%v err=%v", gone, err)
 	}
-	mr.Set(fmt.Sprintf("pos:token:blacklist:%x", sha256.Sum256([]byte("j1"))), "1")
+	_ = mr.Set(fmt.Sprintf("pos:token:blacklist:%x", sha256.Sum256([]byte("j1"))), "1")
 	if gone, err := check(context.Background(), "j1"); !gone || err != nil {
 		t.Fatalf("blacklisted jti: gone=%v err=%v", gone, err)
 	}
 	mr.Close()
 	if _, err := check(context.Background(), "j1"); err == nil {
 		t.Error("redis down must return an error")
+	}
+}
+
+func TestRSAVerifier_issuerAudience(t *testing.T) {
+	key, _ := rsa.GenerateKey(rand.Reader, 2048)
+	exp := time.Now().Add(time.Hour).Unix()
+	tok := func(iss, aud string) string {
+		return sign(t, key, jwt.MapClaims{"sub": "u", "tid": "t", "exp": exp, "iss": iss, "aud": aud})
+	}
+	verify := func(v authn.Verifier, tk string) bool {
+		_, err := v.Verify(context.Background(), tk)
+		return err == nil
+	}
+	strict := authn.NewRSAVerifier(&key.PublicKey, nil, authn.WithIssuer("hris"), authn.WithAudience("hris-api"))
+	if !verify(strict, tok("hris", "hris-api")) {
+		t.Error("matching iss/aud rejected")
+	}
+	if verify(strict, tok("pos", "hris-api")) {
+		t.Error("wrong issuer accepted")
+	}
+	if verify(strict, tok("hris", "pos-api")) {
+		t.Error("wrong audience accepted")
+	}
+	if !verify(authn.NewRSAVerifier(&key.PublicKey, nil), tok("pos", "pos-api")) {
+		t.Error("iss/aud must not be checked without options")
 	}
 }

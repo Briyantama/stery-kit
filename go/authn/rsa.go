@@ -15,12 +15,32 @@ import (
 type RSAVerifier struct {
 	pub     *rsa.PublicKey
 	revoked func(ctx context.Context, jti string) (bool, error)
+	extra   []jwt.ParserOption
+}
+
+// VerifierOption tightens what NewRSAVerifier accepts.
+type VerifierOption func(*RSAVerifier)
+
+// WithIssuer requires the token's iss claim to equal iss, so a token minted for another product
+// that shares the signing key is rejected.
+func WithIssuer(iss string) VerifierOption {
+	return func(v *RSAVerifier) { v.extra = append(v.extra, jwt.WithIssuer(iss)) }
+}
+
+// WithAudience requires the token's aud claim to contain aud.
+func WithAudience(aud string) VerifierOption {
+	return func(v *RSAVerifier) { v.extra = append(v.extra, jwt.WithAudience(aud)) }
 }
 
 // NewRSAVerifier returns a Verifier for tokens signed with the private half of pub. When revoked is
 // not nil every token must carry a jti, and a revoked jti or a failed lookup rejects it (fail closed).
-func NewRSAVerifier(pub *rsa.PublicKey, revoked func(ctx context.Context, jti string) (bool, error)) Verifier {
-	return &RSAVerifier{pub: pub, revoked: revoked}
+// Without opts iss and aud are not checked.
+func NewRSAVerifier(pub *rsa.PublicKey, revoked func(ctx context.Context, jti string) (bool, error), opts ...VerifierOption) Verifier {
+	v := &RSAVerifier{pub: pub, revoked: revoked}
+	for _, o := range opts {
+		o(v)
+	}
+	return v
 }
 
 // Verify checks signature, algorithm (RS256 only), exp (required) and nbf, then reads the identity from
@@ -29,7 +49,7 @@ func NewRSAVerifier(pub *rsa.PublicKey, revoked func(ctx context.Context, jti st
 func (v *RSAVerifier) Verify(ctx context.Context, token string) (Claims, error) {
 	mc := jwt.MapClaims{}
 	if _, err := jwt.ParseWithClaims(token, mc, func(*jwt.Token) (any, error) { return v.pub, nil },
-		jwt.WithValidMethods([]string{"RS256"}), jwt.WithExpirationRequired()); err != nil {
+		append([]jwt.ParserOption{jwt.WithValidMethods([]string{"RS256"}), jwt.WithExpirationRequired()}, v.extra...)...); err != nil {
 		return Claims{}, fmt.Errorf("parse token: %w", err)
 	}
 	// Refresh tokens share the key and carry user_id/tenant_id, so they must never authenticate a request.

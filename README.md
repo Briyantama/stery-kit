@@ -13,7 +13,7 @@ Go module `github.com/Briyantama/stery-kit/go` (`go/`):
 - `testdb`: per-test Postgres databases cloned from a migrated template (skips without `TEST_DATABASE_URL`)
 - `pgtenant`: `WithTenantTx`, a transaction with the tenant and store RLS settings
 - `events`: event envelope, publisher and consumer groups over Redis-protocol streams
-- `authn`: RS256 bearer verification, role checks, optional Redis token revocation
+- `authn`: RS256 bearer verification (optional `WithIssuer`/`WithAudience` checks), role checks, optional Redis token revocation
 - `ratelimit`: fixed-window Redis rate limit middleware
 
 npm package `@stery/kit` (`web/`), TypeScript shipped as source:
