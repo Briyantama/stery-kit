@@ -123,3 +123,25 @@ func TestConsumer_unknownTypeIsAcked(t *testing.T) {
 	eventually(t, "known event", known.Load)
 	eventually(t, "ack of both entries", func() bool { return pending(t, rdb) == 0 })
 }
+
+func TestConsumer_reclaimsEntriesPendingForAnotherConsumer(t *testing.T) {
+	rdb := newClient(t)
+	claimIdle = 100 * time.Millisecond
+	t.Cleanup(func() { claimIdle = time.Minute })
+	ctx := context.Background()
+	if err := rdb.XGroupCreateMkStream(ctx, stream, group, "$").Err(); err != nil {
+		t.Fatal(err)
+	}
+	publish(t, rdb, "a.b")
+	// a consumer that took the entry and never came back
+	if _, err := rdb.XReadGroup(ctx, &redis.XReadGroupArgs{Group: group, Consumer: "dead", Streams: []string{stream, ">"}, Count: 1}).Result(); err != nil {
+		t.Fatal(err)
+	}
+
+	var got atomic.Bool
+	stop := start(t, rdb, map[string]Handler{"a.b": func(context.Context, Envelope) error { got.Store(true); return nil }})
+	defer stop()
+
+	eventually(t, "reclaimed handler call", got.Load)
+	eventually(t, "ack after reclaim", func() bool { return pending(t, rdb) == 0 })
+}

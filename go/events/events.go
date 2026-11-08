@@ -27,6 +27,10 @@ const (
 // blockTime is how long one read waits for new entries; it is a variable so tests can shorten it.
 var blockTime = 5 * time.Second
 
+// claimIdle is how long an entry must sit pending before another read reclaims it, and how often
+// the consumer looks for such entries; a variable so tests can shorten it.
+var claimIdle = time.Minute
+
 // Envelope is the event wrapper every producer and consumer agrees on.
 type Envelope struct {
 	EventID       string          `json:"event_id"`
@@ -74,7 +78,8 @@ type Handler func(ctx context.Context, env Envelope) error
 // On start it first re-processes the entries this consumer left pending, then reads new ones.
 // An entry is acknowledged when its handler returns nil, when its type has no handler, or when its
 // body cannot be decoded (retrying would never succeed). A handler error is logged and the entry
-// stays pending until the next start.
+// stays pending; once it has been idle for claimIdle any consumer of the group reclaims it
+// (XAUTOCLAIM) and retries, so entries of consumers that never return are not lost either.
 func RunConsumer(ctx context.Context, rdb *redis.Client, stream, group, consumer string, handlers map[string]Handler) error {
 	err := rdb.XGroupCreateMkStream(ctx, stream, group, "$").Err()
 	if err != nil && !strings.HasPrefix(err.Error(), "BUSYGROUP") {
@@ -85,7 +90,12 @@ func RunConsumer(ctx context.Context, rdb *redis.Client, stream, group, consumer
 	}
 
 	id := "0" // pending entries first; ">" once none are left
+	lastClaim := time.Now()
 	for ctx.Err() == nil {
+		if id == ">" && time.Since(lastClaim) >= claimIdle {
+			reclaim(ctx, rdb, stream, group, consumer, handlers)
+			lastClaim = time.Now()
+		}
 		streams, err := rdb.XReadGroup(ctx, &redis.XReadGroupArgs{
 			Group: group, Consumer: consumer, Streams: []string{stream, id}, Count: batch, Block: blockTime,
 		}).Result()
@@ -102,25 +112,50 @@ func RunConsumer(ctx context.Context, rdb *redis.Client, stream, group, consumer
 			continue
 		}
 
-		n := 0
 		for _, s := range streams {
-			for _, msg := range s.Messages {
-				n++
-				if id != ">" {
-					id = msg.ID // pending entries that fail again are skipped, not re-read in a loop
-				}
-				if handle(ctx, stream, msg, handlers) {
-					if err := rdb.XAck(ctx, stream, group, msg.ID).Err(); err != nil {
-						slog.ErrorContext(ctx, "ack event", "stream", stream, "id", msg.ID, "error", err)
-					}
-				}
+			if id != ">" && len(s.Messages) > 0 {
+				id = s.Messages[len(s.Messages)-1].ID // pending entries that fail again are skipped, not re-read in a loop
 			}
+			process(ctx, rdb, stream, group, s.Messages, handlers)
 		}
-		if n == 0 {
+		if id != ">" && (len(streams) == 0 || len(streams[0].Messages) == 0) {
 			id = ">"
 		}
 	}
 	return nil
+}
+
+// process runs the handlers for msgs and acknowledges the entries that succeeded.
+func process(ctx context.Context, rdb *redis.Client, stream, group string, msgs []redis.XMessage, handlers map[string]Handler) {
+	for _, msg := range msgs {
+		if handle(ctx, stream, msg, handlers) {
+			if err := rdb.XAck(ctx, stream, group, msg.ID).Err(); err != nil {
+				slog.ErrorContext(ctx, "ack event", "stream", stream, "id", msg.ID, "error", err)
+			}
+		}
+	}
+}
+
+// reclaim takes over entries any consumer of the group has left pending for at least claimIdle
+// (a failed handler, or a consumer that never came back) and processes them here.
+func reclaim(ctx context.Context, rdb *redis.Client, stream, group, consumer string, handlers map[string]Handler) {
+	start := "0-0"
+	for ctx.Err() == nil {
+		msgs, next, err := rdb.XAutoClaim(ctx, &redis.XAutoClaimArgs{
+			Stream: stream, Group: group, Consumer: consumer, MinIdle: claimIdle, Start: start, Count: batch,
+		}).Result()
+		if err != nil {
+			if ctx.Err() == nil {
+				slog.ErrorContext(ctx, "reclaim pending events", "stream", stream, "group", group, "error", err)
+			}
+			return
+		}
+		process(ctx, rdb, stream, group, msgs, handlers)
+		if next == "0-0" || next == "" {
+			return
+		}
+		start = next
+	}
 }
 
 // handle runs the handler for msg and reports whether the entry should be acknowledged.
