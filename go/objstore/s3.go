@@ -289,8 +289,7 @@ func (s *S3) Delete(ctx context.Context, key string) error {
 
 // classify maps the service's "no such object" answers to ErrNotFound.
 func classify(op string, err error) error {
-	var apiErr smithy.APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[smithy.APIError](err); ok {
 		switch apiErr.ErrorCode() {
 		case "NotFound", "NoSuchKey":
 			return ErrNotFound
