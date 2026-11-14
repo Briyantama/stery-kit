@@ -62,7 +62,7 @@
 >
 	<div class="min-w-0 space-y-1">
 		<p class="text-sm text-muted-foreground">{label}</p>
-		<p class="font-display text-2xl font-semibold tracking-tight">{value}</p>
+		<p class="font-display text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
 		{#if delta !== undefined || hint}
 			<p class="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
 				{#if delta !== undefined}

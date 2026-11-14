@@ -77,7 +77,7 @@
 						value={item.value}
 						label={item.label}
 						disabled={item.disabled}
-						class="relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-accent data-highlighted:text-accent-foreground"
+						class="relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-muted"
 					>
 						{#snippet children({ selected: isSelected })}
 							<span class="absolute left-2 inline-flex size-4 items-center justify-center">

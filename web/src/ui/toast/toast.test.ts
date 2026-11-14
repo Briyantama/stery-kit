@@ -35,6 +35,12 @@ describe('toast store', () => {
 		expect(toast.items[2]).toMatchObject({ description: 'more', duration: 0 });
 	});
 
+	it('error toasts stay until dismissed unless a duration is given', () => {
+		toast.error('a');
+		toast.error('b', { duration: 8000 });
+		expect(toast.items.map((t) => t.duration)).toEqual([0, 8000]);
+	});
+
 	it('dismiss removes only the given toast', () => {
 		const a = toast.show({ title: 'a' });
 		const b = toast.show({ title: 'b' });

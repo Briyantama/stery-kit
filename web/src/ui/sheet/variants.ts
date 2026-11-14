@@ -7,8 +7,8 @@ export const sheetVariants = tv({
 	variants: {
 		side: {
 			right: 'inset-y-0 right-0 h-full w-3/4 max-w-sm border-l animate-slide-in-right',
-			left: 'inset-y-0 left-0 h-full w-3/4 max-w-sm border-r transition-[translate] duration-300 starting:-translate-x-full',
-			top: 'inset-x-0 top-0 max-h-[85dvh] border-b transition-[translate] duration-300 starting:-translate-y-full',
+			left: 'inset-y-0 left-0 h-full w-3/4 max-w-sm border-r transition-[translate] duration-(--duration-slow) starting:-translate-x-full',
+			top: 'inset-x-0 top-0 max-h-[85dvh] border-b transition-[translate] duration-(--duration-slow) starting:-translate-y-full',
 			bottom: 'inset-x-0 bottom-0 max-h-[85dvh] border-t animate-slide-in-up'
 		}
 	},

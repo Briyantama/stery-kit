@@ -11,6 +11,6 @@
 	let { ref = $bindable(null), class: className, children, ...rest }: Props = $props();
 </script>
 
-<td bind:this={ref} class={cn('p-3 align-middle', className)} {...rest}>
+<td bind:this={ref} class={cn('p-3 align-middle tabular-nums', className)} {...rest}>
 	{@render children?.()}
 </td>

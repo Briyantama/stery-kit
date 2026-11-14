@@ -18,7 +18,7 @@
 			{ tone: 'neutral', outline: true, class: 'border-border text-foreground' },
 			{ tone: 'info', outline: true, class: 'border-info text-info' },
 			{ tone: 'success', outline: true, class: 'border-success text-success' },
-			{ tone: 'warning', outline: true, class: 'border-warning text-warning' },
+			{ tone: 'warning', outline: true, class: 'border-warning text-warning-foreground' },
 			{ tone: 'destructive', outline: true, class: 'border-destructive text-destructive' }
 		],
 		defaultVariants: { tone: 'neutral' }

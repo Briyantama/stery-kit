@@ -86,7 +86,7 @@
 			data-open={open}
 			onclick={onSidebarClick}
 			class={cn(
-				'fixed inset-y-0 left-0 z-modal flex w-64 flex-col overflow-y-auto border-r border-border bg-surface p-3 text-surface-foreground transition-[transform,visibility] duration-200',
+				'fixed inset-y-0 left-0 z-modal flex w-64 flex-col overflow-y-auto border-r border-border bg-surface p-3 text-surface-foreground transition-[transform,visibility] duration-(--duration-normal)',
 				'md:static md:z-auto md:visible md:translate-x-0',
 				open ? 'translate-x-0' : 'invisible -translate-x-full'
 			)}

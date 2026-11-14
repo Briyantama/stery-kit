@@ -40,7 +40,7 @@ Each role has a `-foreground` partner for text on top of it (Tailwind: `bg-prima
 | `--overlay` | `bg-overlay` | Dialog and sheet backdrop |
 | `--primary`, `--primary-foreground` | `bg-primary` | Brand, main actions, selected states |
 | `--secondary`, `--secondary-foreground` | `bg-secondary` | Quiet actions |
-| `--accent`, `--accent-foreground` | `bg-accent` | Hover and highlight fills (ghost buttons, menu items) |
+| `--accent`, `--accent-foreground` | `bg-accent` | Explicit highlight role (amber). Kit hover fills use `bg-muted` and selected nav uses `bg-primary/10`, not accent |
 | `--destructive`, `--destructive-foreground` | `bg-destructive` | Errors, delete actions |
 | `--success`, `--success-foreground` | `bg-success` | Positive state |
 | `--warning`, `--warning-foreground` | `bg-warning` | Caution |
@@ -176,7 +176,7 @@ All imports come from `@stery/kit/ui`. Every component accepts `class` (merged w
 | Component | Purpose |
 | --- | --- |
 | `Alert` | Inline message: `tone`, `title`, `description`, `icon`, `dismissible`, `ondismiss`. Role is alert for warning and destructive, otherwise status |
-| `Toaster`, `toast` | Mount `<Toaster position="bottom-right" />` once; call `toast.success(title, opts)`, `.error`, `.info`, `.warning`, `.show({ title, tone, duration })`, `.dismiss(id)`, `.clear()` |
+| `Toaster`, `toast` | Mount `<Toaster position="bottom-right" />` once; call `toast.success(title, opts)`, `.error`, `.info`, `.warning`, `.show({ title, tone, duration })`, `.dismiss(id)`, `.clear()`. Default duration 5000ms; error (destructive) toasts default to `0` (stay until dismissed) |
 | `Spinner` | Busy indicator: `size`, `label` |
 | `Skeleton` | Placeholder block; size it with classes |
 | `EmptyState` | Nothing-here panel: `title`, `description`, `icon`, `action` snippets |
@@ -191,7 +191,7 @@ All imports come from `@stery/kit/ui`. Every component accepts `class` (merged w
 | Component | Purpose |
 | --- | --- |
 | `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `DialogClose` | Modal; bindable `open`; content takes `size` sm, md, lg, xl, `showClose`, `closeLabel` |
-| `AlertDialog` family, `ConfirmDialog` | Interruptive confirm. `ConfirmDialog` props: `open`, `title`, `description`, `confirmLabel`, `cancelLabel`, `tone` primary or destructive, `onconfirm` (async, shows busy state), `oncancel`, `trigger` |
+| `AlertDialog` family, `ConfirmDialog` | Interruptive confirm. `ConfirmDialog` props: `open`, `title`, `description`, `confirmLabel`, `cancelLabel`, `tone` primary or destructive, `onconfirm` (async, shows busy state; a rejection keeps the dialog open and shows the message inline), `error` (bindable inline message), `errorLabel` (fallback text), `oncancel`, `trigger` |
 | `Sheet`, `SheetTrigger`, `SheetContent`, `SheetHeader`, `SheetTitle`, `SheetDescription`, `SheetFooter`, `SheetClose` | Edge panel, a Dialog with `SheetContent side` right, left, top, bottom |
 | `Popover`, `PopoverTrigger`, `PopoverContent`, `PopoverClose` | Anchored floating panel |
 | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuSeparator`, `DropdownMenuLabel` | Action menu; item `variant` default or destructive |

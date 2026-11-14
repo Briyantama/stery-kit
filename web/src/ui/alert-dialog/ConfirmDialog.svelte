@@ -15,9 +15,13 @@
 		description?: string;
 		confirmLabel?: string;
 		cancelLabel?: string;
-		/** Runs on confirm. While a returned promise is pending the dialog stays open in a loading state; it closes once it resolves. If it rejects the dialog stays open and the error propagates. */
+		/** Runs on confirm. While a returned promise is pending the dialog stays open in a loading state; it closes once it resolves. If it rejects the dialog stays open and shows the error message inline (see `error`, `errorLabel`). */
 		onconfirm?: () => void | Promise<void>;
 		oncancel?: () => void;
+		/** Inline failure message (role="alert"). Set by the dialog when `onconfirm` rejects; clear or set it yourself too. */
+		error?: string;
+		/** Message used when `onconfirm` rejects without an Error message. */
+		errorLabel?: string;
 		/** Optional trigger element(s), rendered outside the dialog. */
 		trigger?: Snippet;
 		class?: string;
@@ -29,6 +33,8 @@
 		description,
 		confirmLabel = 'Confirm',
 		cancelLabel = 'Cancel',
+		error = $bindable(''),
+		errorLabel = 'Something went wrong. Try again.',
 		tone = 'primary',
 		onconfirm,
 		oncancel,
@@ -38,12 +44,19 @@
 
 	let loading = $state(false);
 
+	$effect(() => {
+		if (!open) error = '';
+	});
+
 	async function confirm() {
 		if (loading) return;
 		loading = true;
+		error = '';
 		try {
 			await onconfirm?.();
 			open = false;
+		} catch (e) {
+			error = (e instanceof Error && e.message) || errorLabel;
 		} finally {
 			loading = false;
 		}
@@ -66,6 +79,9 @@
 					<DialogDescription>{description}</DialogDescription>
 				{/if}
 			</DialogHeader>
+			{#if error}
+				<p role="alert" class="text-sm text-destructive">{error}</p>
+			{/if}
 			<DialogFooter>
 				<AlertDialogPrimitive.Cancel
 					class={cancelButtonClass}
@@ -83,7 +99,7 @@
 				>
 					{#if loading}
 						<svg
-							class="size-4 animate-spin"
+							class="size-4 animate-spin motion-reduce:[animation-duration:2s]"
 							viewBox="0 0 24 24"
 							fill="none"
 							stroke="currentColor"

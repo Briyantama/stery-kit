@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { cn } from '../utils/cn';
 	import { toast, type ToastItem } from './store.svelte';
-	import { toastVariants } from './variants';
+	import { toastDotVariants, toastVariants } from './variants';
 
 	let { item, class: className }: { item: ToastItem; class?: string } = $props();
 
@@ -59,6 +59,7 @@
 		resumeIfIdle();
 	}}
 >
+	<span class={toastDotVariants({ tone: item.tone })} aria-hidden="true"></span>
 	<div class="flex min-w-0 flex-1 flex-col gap-1">
 		<p class="text-sm font-semibold text-foreground">{item.title}</p>
 		{#if item.description}
@@ -68,7 +69,7 @@
 	<button
 		type="button"
 		aria-label="Dismiss notification"
-		class="absolute right-2 top-2 inline-flex size-7 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+		class="absolute right-2 top-2 inline-flex size-7 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 		onclick={() => toast.dismiss(item.id)}
 	>
 		<svg

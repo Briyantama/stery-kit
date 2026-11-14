@@ -5,7 +5,7 @@ export interface ToastOptions {
 	description?: string;
 	/** Defaults to `neutral`. */
 	tone?: ToastTone;
-	/** Milliseconds before auto-dismiss. `0` keeps the toast until dismissed. Defaults to 5000. */
+	/** Milliseconds before auto-dismiss. `0` keeps the toast until dismissed. Defaults to 5000, or `0` for destructive (error) toasts so the message is not lost. */
 	duration?: number;
 }
 
@@ -28,12 +28,13 @@ function show(options: ToastOptions): string {
 	// The store is module-level, so on the server it would be shared by every request: drop toasts there.
 	if (typeof window === 'undefined') return '';
 	const id = `toast-${++seq}`;
+	const tone = options.tone ?? 'neutral';
 	items.push({
 		id,
 		title: options.title,
 		description: options.description,
-		tone: options.tone ?? 'neutral',
-		duration: options.duration ?? DEFAULT_TOAST_DURATION
+		tone,
+		duration: options.duration ?? (tone === 'destructive' ? 0 : DEFAULT_TOAST_DURATION)
 	});
 	return id;
 }

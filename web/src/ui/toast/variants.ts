@@ -1,20 +1,35 @@
 import { tv, type VariantProps } from 'tailwind-variants';
 
 export const toastVariants = tv({
-	base: 'pointer-events-auto relative mt-2 flex w-full items-start gap-3 rounded-md border border-l-4 border-border bg-surface p-4 pr-10 text-surface-foreground shadow-lg animate-slide-in-up',
+	base: 'pointer-events-auto relative mt-2 flex w-full items-start gap-3 rounded-md border border-border bg-surface p-4 pr-10 text-surface-foreground shadow-lg animate-slide-in-up',
 	variants: {
 		tone: {
-			neutral: 'border-l-muted-foreground',
-			info: 'border-l-info',
-			success: 'border-l-success',
-			warning: 'border-l-warning',
-			destructive: 'border-l-destructive'
+			neutral: '',
+			info: 'border-info/50',
+			success: 'border-success/50',
+			warning: 'border-warning/60',
+			destructive: 'border-destructive/50'
 		}
 	},
 	defaultVariants: { tone: 'neutral' }
 });
 
 export type ToastVariant = VariantProps<typeof toastVariants>;
+
+/** Tone marker: a dot in the toast body instead of a thick side stripe. */
+export const toastDotVariants = tv({
+	base: 'mt-1.5 size-2 shrink-0 rounded-full',
+	variants: {
+		tone: {
+			neutral: 'bg-muted-foreground',
+			info: 'bg-info',
+			success: 'bg-success',
+			warning: 'bg-warning',
+			destructive: 'bg-destructive'
+		}
+	},
+	defaultVariants: { tone: 'neutral' }
+});
 
 export const toasterVariants = tv({
 	base: 'pointer-events-none fixed z-toast flex w-full max-w-sm flex-col p-2',

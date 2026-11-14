@@ -38,6 +38,23 @@ describe('ConfirmDialog', () => {
 		await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
 	});
 
+	it('stays open and shows the error when onconfirm rejects', async () => {
+		const onconfirm = vi.fn(() => Promise.reject(new Error('Server said no')));
+		render(ConfirmDialog, { open: true, title: 'Go', onconfirm });
+		const confirm = await screen.findByRole('button', { name: 'Confirm' });
+		await fireEvent.click(confirm);
+		expect(await screen.findByRole('alert')).toHaveTextContent('Server said no');
+		expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+		expect(confirm).toBeEnabled();
+	});
+
+	it('falls back to errorLabel when the rejection has no message', async () => {
+		const onconfirm = vi.fn(() => Promise.reject('boom'));
+		render(ConfirmDialog, { open: true, title: 'Go', onconfirm, errorLabel: 'Gagal.' });
+		await fireEvent.click(await screen.findByRole('button', { name: 'Confirm' }));
+		expect(await screen.findByRole('alert')).toHaveTextContent('Gagal.');
+	});
+
 	it('calls oncancel and closes on cancel', async () => {
 		const oncancel = vi.fn();
 		render(ConfirmDialog, { open: true, title: 'Go', oncancel });

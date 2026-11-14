@@ -23,7 +23,7 @@
 	>
 		{@render children?.()}
 		<svg
-			class="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
+			class="size-4 shrink-0 text-muted-foreground transition-transform duration-(--duration-normal) group-data-[state=open]:rotate-180"
 			viewBox="0 0 24 24"
 			fill="none"
 			stroke="currentColor"
